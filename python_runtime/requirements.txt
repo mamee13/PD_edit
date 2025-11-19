@@ -1,0 +1,4 @@
+pdfly
+pikepdf
+pillow
+reportlab
