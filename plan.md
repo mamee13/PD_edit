@@ -1,488 +1,199 @@
 {
-  "project": "PDFly Flutter Offline App (Track B) - Embedded Python",
-  "summary": "Offline mobile app (Flutter) with an embedded Python runtime and pdfly for local PDF manipulation on Android and iOS. Track B: Python runtime bundled on-device (no network). 10-day focused plan plus full feature list and deliverables.",
-  "goals": [
-    "Fully offline PDF manipulation (merge, split, watermark, compress, etc.)",
-    "Embed Python runtime (pyoxidizer or python-build-standalone) for Android & iOS",
-    "Provide Flutter UI that calls Python functions via a native FFI bridge",
-    "Prepare App Store & Play Store submissions with privacy-ready metadata",
-    "Ship within ~10 days while maintaining App-Store safety (no downloaded code)"
-  ],
-  "priority": {
-    "must_have": [
-      "Merge",
-      "Split",
-      "Watermark/Stamp",
-      "Compress/Optimize",
-      "Preview (PDF viewer)",
-      "Local file picker & storage",
-      "Embedded Python runtime bundled (no downloads)",
-      "Flutter ↔ native bridge (FFI) to call Python functions",
-      "Progress indicator for long ops",
-      "Basic error handling & user messages",
-      "Privacy policy: local-only processing"
-    ],
-    "nice_to_have": [
-      "Page reorder",
-      "Rotate",
-      "Crop pages",
-      "Extract text (pdfly or text-extraction)",
-      "Search inside PDF",
-      "Thumbnail view",
-      "Batch operations (apply to multiple files)",
-      "History / operation log",
-      "Save as / export / share",
-      "Password protect & decrypt (if user provides password)",
-      "Local undo of last operation",
-      "Dark mode",
-      "Accessibility labels and localization (English + Amharic)"
-    ],
-    "advanced_features": [
-      "Annotate (highlight, comments, ink)",
-      "Form fill & save (PDF forms)",
-      "Signatures (draw or import signature image)",
-      "OCR (optional, heavy; offer as optional module)",
-      "Template-based stamping (multiple watermark templates)",
-      "Local backups (export project bundle)",
-      "Local analytics (opt-in, privacy-first)"
-    ]
-  },
-  "project_structure_recommendation": {
-    "top_level": [
-      "flutter_app/   (Flutter project)",
-      "python_runtime/   (bundled python + site-packages + app scripts)",
-      "native_bridge/    (C/Rust shim source + prebuilt binaries)",
-      "scripts/          (build/bundle/sign scripts)",
-      "docs/             (store metadata, privacy policy, assets)",
-      "samples/          (sample PDFs for testing)"
-    ],
-    "python_runtime_contents": [
-      "bin/ (python executables for target ABIs)",
-      "lib/ (libpython / shared libs)",
-      "site-packages/ (pdfly + dependencies)",
-      "app/ (pdf_ops.py and helper scripts)"
-    ]
-  },
-  "day_by_day_plan": [
-    {
-      "day": 1,
-      "title": "Prep, repo & toolchain setup",
-      "tasks": [
-        "Create repository and branches: main, dev, android-bridge, ios-bridge",
-        "Install dev tools in IDE: Flutter SDK, Android SDK, Xcode (mac), Rust toolchain, Python 3.10 (host)",
-        "Create initial folder structure (see project_structure_recommendation)",
-        "Write an MVP spec and feature-priority list in repo (README or doc)",
-        "Prepare App Store & Play Store dev accounts (ensure Apple Developer subscription available)"
-      ],
-      "deliverables": [
-        "Repo skeleton committed",
-        "MVP spec document",
-        "List of required platform accounts & credentials"
-      ]
-    },
-    {
-      "day": 2,
-      "title": "Build embeddable Python runtime (PyOxidizer or equivalent)",
-      "tasks": [
-        "Choose bundling tool (PyOxidizer recommended) and install Rust toolchain if needed",
-        "Create pyoxidizer/build plan for target platforms (android arm64/x86_64, iOS arm64 & simulator)",
-        "Build initial standalone Python artifact(s) and copy runtime files into python_runtime/",
-        "Document exact runtime file layout and platform-specific notes"
-      ],
-      "deliverables": [
-        "python_runtime/ with basic Python stdlib + runtime binaries for one or more targets",
-        "Build notes & commands saved in scripts/"
-      ]
-    },
-    {
-      "day": 3,
-      "title": "Install pdfly and dependencies into runtime; write pdf_ops API spec",
-      "tasks": [
-        "Install pdfly, pikepdf, pillow, reportlab (and any pure-Python fallbacks) into python_runtime/site-packages",
-        "Create the pdf_ops API spec (function names, arguments, expected JSON outputs and error formats)",
-        "Write exception & logging conventions for pdf_ops (JSON error object with code/message)",
-        "Create a short test plan for python_runtime to validate imports"
-      ],
-      "deliverables": [
-        "python_runtime/site-packages populated",
-        "pdf_ops API specification (no code) saved under docs/",
-        "Quick manual test proof (logs showing Python can import pdfly) documented"
-      ]
-    },
-    {
-      "day": 4,
-      "title": "Native bridge design & PoC plan (C or Rust shim)",
-      "tasks": [
-        "Choose bridge implementation language: C (Python/C API) or Rust (pyo3) depending on team skills",
-        "Define FFI interface: init_python(), call_function(module, function, json_args), get_status(), cleanup()",
-        "Design messaging format (JSON in/out), and progress reporting approach (status file or polling API)",
-        "Write build plan to produce platform-shared libraries (.so/.dylib/.framework) per platform"
-      ],
-      "deliverables": [
-        "native_bridge interface spec (function signatures, types)",
-        "Build matrix for native bridge per-ABI"
-      ]
-    },
-    {
-      "day": 5,
-      "title": "Flutter FFI integration & minimal UI (file picker & run button)",
-      "tasks": [
-        "Implement FFI consumer design in Flutter (native library loader logic and JSON wrapper)",
-        "Create minimal UI screens: Home, File Picker, Operation selection, Result/Preview placeholder",
-        "Wire file picker to choose local files and pass file paths to the FFI layer",
-        "Implement simple error display and toast/snackbar UX"
-      ],
-      "deliverables": [
-        "Flutter app skeleton with FFI hooks",
-        "UI flows mapped and accessible screens implemented"
-      ]
-    },
-    {
-      "day": 6,
-      "title": "Android packaging & end-to-end test",
-      "tasks": [
-        "Package Python runtime into Android app assets and native .so into jniLibs for ABIs",
-        "Ensure the native bridge is built for Android ABIs and placed in the app",
-        "Run end-to-end operations on Android device/emulator: call pdf_ops.merge on sample PDFs and validate saved output",
-        "Collect logs and iterate on dependency import issues (ABI/wheel problems)"
-      ],
-      "deliverables": [
-        "Debuggable Android APK with embedded Python & bridge",
-        "End-to-end test report with sample outputs"
-      ]
-    },
-    {
-      "day": 7,
-      "title": "iOS packaging, signing & device tests",
-      "tasks": [
-        "Bundle Python runtime into iOS app bundle resources",
-        "Link and sign native bridge library for iOS (dylib / framework); set correct @rpath and install names",
-        "Test on iOS simulator and a real device; run basic pdf_ops operations and validate outputs",
-        "Document any code-signing or entitlement issues and solutions"
-      ],
-      "deliverables": [
-        "Xcode project configured to include python_runtime assets",
-        "Successful device run logs (or documented blockers if any)"
-      ]
-    },
-    {
-      "day": 8,
-      "title": "Complete feature implementations & UX polish",
-      "tasks": [
-        "Complete python-side pdf_ops functions: merge, split, watermark, compress, rotate, page reorder, extract_text",
-        "Add progress reporting mechanism (status file, small polling API, or callback events)",
-        "Implement preview (Flutter PDF viewer), thumbnails, and Save/Share UX flow",
-        "Add history log (local DB) and basic file manager actions (open, delete, rename)"
-      ],
-      "deliverables": [
-        "All core features implemented and callable from Flutter",
-        "Progress UI and preview working",
-        "History stored in local DB"
-      ]
-    },
-    {
-      "day": 9,
-      "title": "Testing, optimization & final QA",
-      "tasks": [
-        "Run integration tests on multiple devices (low-end & high-end), including 50–200 page PDFs",
-        "Profile memory and CPU for large operations; apply fixes (chunk processing, GC, interpreter restarts if needed)",
-        "Strip unneeded runtime components to reduce app size; prepare compressed assets",
-        "Complete accessibility & localization (add Amharic strings if possible)"
-      ],
-      "deliverables": [
-        "Performance test report",
-        "Optimized runtime & reduced package size",
-        "Localization strings ready"
-      ]
-    },
-    {
-      "day": 10,
-      "title": "Release builds & store submission",
-      "tasks": [
-        "Build Android AAB signed for release and upload to Play Console (internal testing track)",
-        "Archive & sign iOS build in Xcode, upload to App Store Connect, create TestFlight build",
-        "Prepare store metadata: screenshots, app description, privacy policy (explicitly state local-only processing), icons",
-        "Submit both stores for review and prepare a response template for potential App-Store questions about embedded interpreter (explain no remote code downloads)"
-      ],
-      "deliverables": [
-        "Android AAB uploaded to Play Console (internal test)",
-        "iOS IPA uploaded to App Store Connect / TestFlight",
-        "Store metadata and privacy policy documents"
-      ]
-    }
-  ],
-  "features_full_list": [
-    {
-      "name": "Merge",
-      "priority": "must_have",
-      "description": "Combine multiple PDFs into a single PDF; support reordering pages before finalizing."
-    },
-    {
-      "name": "Split / Extract pages",
-      "priority": "must_have",
-      "description": "Split a PDF into multiple files by page ranges or extract selected pages."
-    },
-    {
-      "name": "Watermark / Stamp",
-      "priority": "must_have",
-      "description": "Apply an image or PDF watermark/stamp (single or tiled), opacity control and position settings."
-    },
-    {
-      "name": "Compress / Optimize",
-      "priority": "must_have",
-      "description": "Reduce file size with quality/size tradeoff; allow presets (low/medium/high)."
-    },
-    {
-      "name": "Preview PDF",
-      "priority": "must_have",
-      "description": "In-app PDF viewer for results and originals with page navigation."
-    },
-    {
-      "name": "Local file picker & file management",
-      "priority": "must_have",
-      "description": "Pick files from local storage, manage results in app, rename/delete and clean temp files."
-    },
-    {
-      "name": "Page reorder",
-      "priority": "nice_to_have",
-      "description": "Drag & drop pages to reorder within a PDF prior to saving."
-    },
-    {
-      "name": "Rotate & Crop pages",
-      "priority": "nice_to_have",
-      "description": "Rotate pages by 90/180/270 and crop page bounds."
-    },
-    {
-      "name": "Extract text / search",
-      "priority": "nice_to_have",
-      "description": "Extract selectable text from PDFs and provide search across document."
-    },
-    {
-      "name": "Thumbnails & multi-page view",
-      "priority": "nice_to_have",
-      "description": "Show thumbnails grid and allow multi-page export options."
-    },
-    {
-      "name": "Batch operations",
-      "priority": "nice_to_have",
-      "description": "Run same operation across multiple files (e.g., stamp 20 files)."
-    },
-    {
-      "name": "History / operation log",
-      "priority": "nice_to_have",
-      "description": "Local log of operations with timestamps, input files, and output path for quick retry."
-    },
-    {
-      "name": "Share / Save as / Export",
-      "priority": "must_have",
-      "description": "Export processed file to other apps or save to file system."
-    },
-    {
-      "name": "Password protection & decrypt",
-      "priority": "nice_to_have",
-      "description": "Allow opening password-protected PDFs (user-supplied password) and optionally set passwords on outputs."
-    },
-    {
-      "name": "Annotate & Form fill",
-      "priority": "advanced_features",
-      "description": "Add highlights, notes, draw ink, and fill PDF forms (optional advanced module)."
-    },
-    {
-      "name": "Signatures",
-      "priority": "advanced_features",
-      "description": "Draw, import or place a signature image and flatten signature onto PDF."
-    },
-    {
-      "name": "OCR (optional)",
-      "priority": "advanced_features",
-      "description": "Offer optional OCR module (heavy CPU + storage) for scanned PDFs; keep as optional download or absent if avoiding downloads."
-    },
-    {
-      "name": "Offline-first UX",
-      "priority": "must_have",
-      "description": "All functionality works without network; app shows clear 'offline' privacy messaging."
-    },
-    {
-      "name": "Localization & Accessibility",
-      "priority": "must_have",
-      "description": "Support English and Amharic strings, accessibility labels and readable fonts; high-contrast mode and screen-reader friendly flows."
-    },
-    {
-      "name": "App settings and storage manager",
-      "priority": "must_have",
-      "description": "Settings for default output folder, max temp folder size, cleanup schedule, and privacy toggles."
-    },
-    {
-      "name": "Onboarding & in-app help",
-      "priority": "must_have",
-      "description": "Short onboarding for first-run and a help screen describing local processing and basic instructions."
-    }
-  ],
-  "data_contracts_and_apis": {
-    "pdf_ops_api_spec": {
-      "format": "JSON in/out",
-      "standard_response": {
-        "status": "ok|error",
-        "output": "path to output file (if status=ok)",
-        "error": {
-          "code": "string",
-          "message": "string",
-          "details": "optional string"
-        }
-      },
-      "functions": [
-        {
-          "name": "merge",
-          "args": {
-            "files": ["array of absolute file path strings"],
-            "output": "absolute output path string"
-          }
-        },
-        {
-          "name": "split",
-          "args": {
-            "file": "input file path",
-            "pages": "array of pages or page ranges",
-            "output": "output path or pattern"
-          }
-        },
-        {
-          "name": "watermark",
-          "args": {
-            "file": "input path",
-            "watermark_file": "path to watermark (pdf/image)",
-            "options": {"opacity": "0-1", "position": "string", "scale": "float"},
-            "output": "output path"
-          }
-        },
-        {
-          "name": "compress",
-          "args": {
-            "file": "input path",
-            "quality": "low|medium|high or numeric",
-            "output": "output path"
-          }
-        },
-        {
-          "name": "rotate",
-          "args": {
-            "file": "input path",
-            "angle": "90|180|270",
-            "pages": "optional list of page indices",
-            "output": "output path"
-          }
-        }
-      ]
-    }
-  },
-  "testing_and_quality_assurance": {
-    "unit_tests": [
-      "Python unit tests for pdf_ops functions (input validation, error handling)",
-      "Flutter widget tests for UI components (file picker, preview, status)",
-      "Native bridge integration tests (call functions end-to-end)"
-    ],
-    "integration_tests": [
-      "End-to-end tests on real Android devices and iOS devices (small/large PDFs)",
-      "Stress tests with large files and many concurrent operations",
-      "File-system permission tests (first-run flows)"
-    ],
-    "manual_tests": [
-      "Try password-protected PDFs with known passwords",
-      "Test file sharing and opening in other apps",
-      "Test app when storage is low (edge case)",
-      "Test localization strings and screen-reader flows"
-    ],
-    "performance": [
-      "Memory and CPU profiling during merge/split/compress",
-      "Measure operation duration vs file size and track improvements",
-      "Add progress feedback for operations expected >3 seconds"
-    ]
-  },
-  "store_submission_checklist": {
-    "app_store": {
-      "items": [
-        "App Store Connect account active",
-        "App privacy policy URL (explain local-only processing)",
-        "App description, keywords, screenshots (iPhone + iPad sizes)",
-        "Add export compliance answers (no remote code download; use built-in interpreter)",
-        "Provide TestFlight build and invite internal testers",
-        "Prepare reviewer notes explaining embedded Python usage and that no code is downloaded"
-      ]
-    },
-    "play_store": {
-      "items": [
-        "Google Play Console account active",
-        "AAB signed and uploaded to internal test track",
-        "Privacy policy link (local-only processing)",
-        "Store listing assets (screenshots, short & long descriptions)"
-      ]
-    }
-  },
-  "troubleshooting_common_issues": [
-    {
-      "issue": "Python import errors on device",
-      "cause": "Missing site-packages or incorrect ABI for compiled wheels",
-      "fixes": [
-        "Ensure site-packages contains prebuilt wheels for target ABI",
-        "Include required native libs in runtime",
-        "Test imports in a local emulator before packaging"
-      ]
-    },
-    {
-      "issue": "Shared library (.so/.dylib) fails to load",
-      "cause": "ABI mismatch or wrong install_name/@rpath on iOS",
-      "fixes": [
-        "Verify ABI (arm64 vs armeabi-v7a) and place libs in correct jniLibs/<ABI>/",
-        "Fix @rpath and sign dylibs on iOS; set correct install_name in build"
-      ]
-    },
-    {
-      "issue": "App rejected for dynamic code execution",
-      "cause": "App appears to download and execute new Python scripts",
-      "fixes": [
-        "Confirm all Python scripts and packages are bundled with the app and do not require network",
-        "Prepare reviewer notes detailing offline-only processing"
-      ]
-    },
-    {
-      "issue": "Large app size",
-      "cause": "Bundled Python + many site-packages",
-      "fixes": [
-        "Strip unused stdlib modules, remove debug symbols, compress assets",
-        "Consider optional modules behind feature toggles (exclude heavy optional features)"
-      ]
-    }
-  ],
-  "security_and_policy_notes": [
-    "Do NOT download or execute Python code from network after installation — Apple may reject apps that allow arbitrary code execution.",
-    "State in privacy policy: all PDF processing is local, no user data leaves device (unless user explicitly shares file).",
-    "If the app uses encryption functions beyond network TLS, answer export compliance accordingly in App Store Connect.",
-    "Follow licensing requirements for third-party packages used (pdfly, pikepdf) and include license acknowledgments in About screen or docs."
-  ],
-  "assets_and_marketing": {
-    "graphics": [
-      "App icon (all required sizes)",
-      "Launch screen / splash art",
-      "Store screenshots for phones & tablets (highlight offline privacy)",
-      "Promo video (optional 15–30s demo of key flows)"
-    ],
-    "docs": [
-      "Short privacy policy page (hosted or embedded link)",
-      "Support email & quick troubleshooting FAQ",
-      "User guide / in-app help (Onboarding + Help screen)"
-    ]
-  },
-  "final_deliverables": [
-    "flutter_app/ with UI, FFI integration and preview",
-    "python_runtime/ with embedded Python + site-packages + pdf_ops API spec",
-    "native_bridge/ compiled artifacts for Android & iOS and source",
-    "scripts/ to rebuild runtime and bundle artifacts",
-    "release builds (Android AAB, iOS IPA uploaded to TestFlight)",
-    "store metadata and privacy policy ready"
-  ],
-  "notes": [
-    "This JSON is a blueprint for the full Track B implementation; follow the day-by-day plan in order but adapt to blockers (e.g., ABI/wheel issues).",
-    "If iOS bundling becomes blocker, fallback to hybrid approach: native Dart PDF for iOS and embedded Python for Android to meet strict deadlines.",
-    "Keep all Python source files bundled inside the app to comply with App-Store policies (no runtime downloads)."
-  ]
+"project": "PDF Manipulation Web — Single-Server Hosted (Node.js + pdfly Python service)",
+"approach": "Single VM / single-server deployment running both Node.js backend and embedded Python pdfly service. Fastest path: install Python and Node directly on server, run both as system services, expose Node API to clients, keep filesystem storage local on server.",
+"server_requirements": {
+"os": "Ubuntu 22.04 LTS (or similar Linux distro)",
+"cpu": "2 vCPU (scale up if heavy load)",
+"ram": "4 GB (increase for large PDF workloads)",
+"disk": "50 GB (SSD recommended) with additional space for temporary PDFs",
+"network": "Public IP and DNS control",
+"accounts": "SSH access, sudo privileges, domain DNS control"
+},
+"pre_requisites_local": [
+"Git repository with backend/, frontend/, python_runtime/ folders",
+"Node.js LTS installed locally for development",
+"Python 3.10+ for building/testing pdfly code locally",
+"Sample PDFs in samples/ for testing"
+],
+"high_level_steps": [
+"Provision server (VM) with SSH access",
+"Install system dependencies (Node, Python, nginx)",
+"Prepare and test Python pdfly service locally",
+"Prepare and test Node backend locally",
+"Set up systemd services to run Node and Python services on the server",
+"Configure nginx as reverse proxy and SSL termination",
+"Deploy code to server and run end-to-end tests",
+"Set up basic monitoring, logs and automated cleanup",
+"Create deployment runbook"
+],
+"detailed_step_by_step_tasks": [
+{
+"step": "Provision server",
+"tasks": [
+"Create a cloud VM (DigitalOcean / AWS / Linode / DO) with recommended spec",
+"Add SSH public key to server user",
+"Create swap (if needed) and ensure firewall (allow SSH, HTTP, HTTPS)"
+]
+},
+{
+"step": "System setup",
+"tasks": [
+"Update package lists and apply system updates",
+"Create dedicated app user (non-root) for running services",
+"Install build-essential tools (compiler toolchain) and curl/wget",
+"Install Node.js LTS and npm or yarn",
+"Install Python 3.10+ and pip",
+"Install nginx for reverse proxy"
+]
+},
+{
+"step": "Prepare Python runtime and pdfly locally",
+"tasks": [
+"On your dev machine: create the python_runtime/ layout and test pdf_ops functions using local Python",
+"Install pdfly and any Python dependencies into a venv and validate merge/split/watermark operations locally",
+"If desired, create a minimal HTTP wrapper (python microservice) or CLI script that accepts JSON input and returns JSON output (no external code downloads)"
+]
+},
+{
+"step": "Prepare Node backend locally",
+"tasks": [
+"Implement Node API routes /merge /split /watermark /compress /status according to agreed JSON contract",
+"Implement Node orchestration to call Python microservice via HTTP or spawn Python CLI script and parse JSON responses",
+"Implement temp file management strategy (app data folder, unique names, cleanup after success or failure)",
+"Implement basic logging for each operation (input, output path, duration, errors)",
+"Test Node endpoints locally against the python_runtime using sample PDFs"
+]
+},
+{
+"step": "Server deployment scaffold",
+"tasks": [
+"Push code to remote Git repository",
+"Clone repo on server under the dedicated app user",
+"Set up environment variables files (.env) on the server (not in repo) for Node and Python service configuration",
+"Create directories for persistent storage: app_data/input, app_data/output, app_logs, app_tmp"
+]
+},
+{
+"step": "Install runtime on server",
+"tasks": [
+"On server: install Node.js runtime (same major version as dev) and pip for Python 3.10",
+"Create a Python virtual environment on server and pip-install pdfly and required packages into it (or copy built site-packages if using portable runtime)",
+"Verify Python service runs on server in test mode (call it manually to merge sample PDFs)",
+"Install Node dependencies in backend/ on server and verify Node server runs in test mode"
+]
+},
+{
+"step": "Service management (systemd)",
+"tasks": [
+"Create systemd service unit for Python microservice (executes venv python with the wrapper) so it restarts on failure",
+"Create systemd service unit for Node backend (executes node index.js or PM2-managed process)",
+"Enable and start both services and verify they auto-restart on reboot",
+"Ensure services run under the dedicated app user and have access to app_data folders"
+]
+},
+{
+"step": "Reverse proxy and SSL",
+"tasks": [
+"Configure nginx as reverse proxy: route /api/* to Node backend (localhost:PORT) and route /pdf-service/* to python service if necessary (or keep Python behind Node)",
+"Set up SSL with Certbot (Let’s Encrypt) or use the host provider’s managed certs",
+"Configure HTTP->HTTPS redirect and basic security headers (X-Frame-Options, X-XSS-Protection)",
+"Test HTTPS endpoints and ensure certificate auto-renewal is configured"
+]
+},
+{
+"step": "Database / persistence (optional)",
+"tasks": [
+"If you need history/log storage: install PostgreSQL or use SQLite for simple deployments",
+"Create database user and schema, update backend config to point to DB",
+"Run DB migrations locally and on server (if applicable)"
+]
+},
+{
+"step": "File handling, permissions, and cleanup",
+"tasks": [
+"Set ownership and permissions on app data folders so services can read/write",
+"Implement an automated cleanup cron job or systemd timer to remove temp files older than threshold",
+"Verify backup snapshot policy for any persistent storage used"
+]
+},
+{
+"step": "Deploy frontend",
+"tasks": [
+"Build frontend static assets locally or on server",
+"Serve frontend via nginx (static files) or use Node to serve the built app",
+"Verify frontend can call Node API endpoints over HTTPS"
+]
+},
+{
+"step": "End-to-end testing on server",
+"tasks": [
+"Upload sample PDFs via frontend and trigger merge/split/watermark/compress operations",
+"Confirm resulting PDFs are written to output folder and are viewable",
+"Confirm logs record operations and services remain stable under test load"
+]
+},
+{
+"step": "Production hardening",
+"tasks": [
+"Configure process monitoring (systemd + journalctl or PM2) and log rotation",
+"Add simple metrics: request rate, error count, average operation time (can be simple log counters)",
+"Tune ulimits and worker settings if Node or Python uses thread pools or subprocesses",
+"Strip debug flags and run services in production mode"
+]
+},
+{
+"step": "Monitoring & alerting",
+"tasks": [
+"Install basic monitoring agent (cloud provider agent or Prometheus exporter) or use a managed small observability tool",
+"Configure alerts for service down, high CPU, low disk space",
+"Set up simple log shipping (or download logs periodically) for post-mortem"
+]
+},
+{
+"step": "Deployment automation (optional but recommended)",
+"tasks": [
+"Create simple deploy script that pulls latest code, installs dependencies, restarts services, and runs basic smoke tests",
+"Integrate with CI to push to server via SSH on successful main branch builds (deploy key or CI runner)",
+"Keep rollback instructions and a tagged last-known-good release"
+]
+},
+{
+"step": "Runbook & documentation",
+"tasks": [
+"Document commands to restart services, view logs, and rebuild Python runtime",
+"Add troubleshooting notes for common errors (Python import errors, permission denied, missing libs)",
+"Save server access and config locations in the repo docs/deploy/readme"
+]
+}
+],
+"testing_checklist": [
+"Merge multiple PDFs and verify page order and integrity",
+"Split PDF by page ranges and verify each output file",
+"Apply watermark and verify placement and opacity in output",
+"Compress PDF and compare file sizes pre/post operation",
+"Test edge cases: single-page PDF, very large PDF, corrupted PDF input (error handling)",
+"Check service restarts after simulated crash and confirm systemd restarts the service"
+],
+"operational_tasks_after_launch": [
+"Monitor logs for exceptions and resource spikes for first 48 hours",
+"Run cleanup job daily to remove temp files older than X days",
+"Rotate SSL certs automatically (ensure certbot auto-renew is enabled)",
+"Keep OS and packages updated (schedule maintenance window)"
+],
+"rollback_plan": [
+"If new deploy causes failures: revert to previous git tag, restart services, and validate smoke tests",
+"If Python runtime fails: stop Node service, run Python tests manually, restore previous runtime artifact and restart services",
+"If disk space full: disable ingestion endpoints, run cleanup script, remove large temp files, and scale disk if required"
+],
+"deliverables_on_completion": [
+"Server with Node backend and Python pdfly service running as system services",
+"Nginx reverse proxy with HTTPS and valid certificate",
+"Frontend served and functional against backend APIs",
+"Automated cleanup job for temp files and basic monitoring configured",
+"Runbook with restart/redeploy instructions and troubleshooting tips"
+],
+"notes": [
+"This plan assumes you accept running Python and Node directly on the same server for simplicity and speed.",
+"If you later need horizontal scale or stronger isolation, convert the Python service into a container and use multiple instances behind a load balancer."
+]
 }
